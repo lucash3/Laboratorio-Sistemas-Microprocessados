@@ -32,7 +32,7 @@ int main(void)
 
     while (1) {
         if (!(P4IN & BIT1) || !(P2IN & BIT3)) {     // se algum botao for press.
-            debounce(5000);
+            debounce(5000);     // tempo de setup (poderia usar sleep aqui)
             if (!(P4IN & BIT1) && !(P2IN & BIT3)) { // S1 && S2 press.
                 //desliga LEDs
                 P1OUT &= ~(BIT0);

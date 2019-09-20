@@ -1,6 +1,5 @@
 #include <msp430.h>
 #include <stdint.h>
-//#include <stdbool.h>
 
 void debounce (volatile uint16_t dt) {
     while(dt--);
@@ -39,11 +38,12 @@ int main(void)
                 P1OUT &= ~(BIT0);
                 P6OUT &= ~(BIT6);
             } else {
-                if (!(P4IN & BIT1)) {   // S1 press.
+                if (!(P4IN & BIT1) && (P2IN & BIT3)) {  // S1 press. S2 solto
                     // inverte ambos os LEDs
                     P1OUT ^= BIT0;
                     P6OUT ^= BIT6;
-                } else {                // S2 press
+                }
+                if (!(P2IN & BIT3) && (P4IN & BIT1)) {  // S2 press. S1 solto
                     // inverte LED verde
                     P6OUT ^= BIT6;
                 }

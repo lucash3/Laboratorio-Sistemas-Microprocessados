@@ -9,22 +9,23 @@ void debounce (volatile uint16_t dt) {
 int main(void)
 {
     WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
+    PM5CTL0 &= ~(LOCKLPM5);
 
-    P4DIR &= ~(BIT1);           // habilita entrada no P4.1 (botao)
+    P4DIR &= ~BIT1;             // habilita entrada no P4.1 (botao)
     P4REN |= BIT1;              // habilita resistor
     P4OUT |= BIT1;              // escolhe resistor de pull up
 
-    P2DIR &= ~(BIT3);           // habilita entrada no P2.3 (botao)
+    P2DIR &= ~BIT3;             // habilita entrada no P2.3 (botao)
     P2REN |= BIT3;              // habilita resistor
     P2OUT |= BIT3;              // escolhe resistor de pull up
 
     P1DIR |= BIT0;              // habilita saida no P1.0 (LED)
-    P1REN &= ~(BIT0);           // habilita resistor de pull up
-    P1OUT &= ~(BIT0);           // zera saida
+    P1REN &= ~BIT0;             // habilita resistor de pull up
+    P1OUT &= ~BIT0;             // zera saida
 
     P6DIR |= BIT6;              // habilita saida no P6.6 (LED)
-    P6REN &= ~(BIT6);           // habilita resistor de pull up
-    P6OUT &= ~(BIT6);           // zera saida
+    P6REN &= ~BIT6;             // habilita resistor de pull up
+    P6OUT &= ~BIT6;             // zera saida
 
     uint8_t state = 0;
 
@@ -57,20 +58,20 @@ int main(void)
         switch (state) {
             case 0:
                 // RG = 00
-                P1OUT &= ~(BIT0);
-                P6OUT &= ~(BIT6);
+                P1OUT &= ~BIT0;
+                P6OUT &= ~BIT6;
                 break;
 
             case 1:
                 // RG = 01
-                P1OUT &= ~(BIT0);
+                P1OUT &= ~BIT0;
                 P6OUT |= BIT6;
                 break;
 
             case 2:
                 // RG = 10
                 P1OUT |= BIT0;
-                P6OUT &= ~(BIT6);
+                P6OUT &= ~BIT6;
                 break;
 
             case 3:

@@ -8,6 +8,12 @@
     P6.2    ---->   S2
     P6.3    ---->   S3
     P1.6    <----   OUT
+
+    No sensor TCS3200, as entradas sao:
+    Pinos   ---->   Funcao                          (00, 01, 10, 11)
+    S1, S0  ---->   Seletores de escala de frequencia (0, 2, 20 ou 100%)
+    S2, S3  ---->   Seletores de leitura de cor (Verm. Azul, Branca, Verde)
+    OUT     ---->   Saida do sinal de frequencia gerado
 */
 
 // *** AINDA PRECISA ADICIONAR CONFIGURACOES DE PINO ***

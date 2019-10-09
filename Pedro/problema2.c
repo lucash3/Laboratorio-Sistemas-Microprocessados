@@ -12,7 +12,7 @@
     No sensor TCS3200, os pinos sao:
     Pinos   ---->   Funcao                            (00, 01, 10, 11)
     S0, S1  ---->   Seletores de escala de frequencia (0, 2, 20 ou 100%)
-    S2, S3  ---->   Seletores de leitura de cor (Verm. Azul, Branca, Verde)
+    S2, S3  ---->   Seletores de leitura de cor (Verm., Azul, Branca, Verde)
     OUT     ---->   Saida do sinal de frequencia gerado
 */
 

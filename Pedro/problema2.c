@@ -9,9 +9,9 @@
     P6.3    ---->   S3
     P1.6    <----   OUT
 
-    No sensor TCS3200, as entradas sao:
-    Pinos   ---->   Funcao                          (00, 01, 10, 11)
-    S1, S0  ---->   Seletores de escala de frequencia (0, 2, 20 ou 100%)
+    No sensor TCS3200, os pinos sao:
+    Pinos   ---->   Funcao                            (00, 01, 10, 11)
+    S0, S1  ---->   Seletores de escala de frequencia (0, 2, 20 ou 100%)
     S2, S3  ---->   Seletores de leitura de cor (Verm. Azul, Branca, Verde)
     OUT     ---->   Saida do sinal de frequencia gerado
 */
@@ -24,7 +24,8 @@ void main() {
     int R, G, B;
 
     P6OUT |= BIT0;      // seleciona escala do sinal
-    P6OUT &= ~BIT1;     // em 2% da frequencia original
+    P6OUT &= ~BIT1;     // em 20% da frequencia original
+                        // S0 = 1; S1 = 0
 
     // MAIN LOOP ---------------------------------------------------------------
     while (1) {

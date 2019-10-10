@@ -25,6 +25,14 @@ void main() {
     PM5CTL0 &= ~(LOCKLPM5);     // destrava pinos digitais
 
     // CONFIGURACOES DE PINO ---------------------------------------------------
+    TB0CTL = MC_1     |         // configuracao de timer
+             TBSSEL_1 |
+             TBCLR;
+
+    TB0CCTL1 = CM_1 |
+               SCS  |
+               CAP;
+
     P6DIR |= (BIT0|BIT1|BIT2|BIT3);     // habilita saída nos pinos
     P6REN &= ~(BIT0|BIT1|BIT2|BIT3);    // desabilita resistor
 
@@ -100,15 +108,6 @@ void main() {
         // flag so e setada quando as leituras
         // R, G e B ja foram executadas
         if (flag == 1) {
-            /*
-            TB0CTL = MC_1     |
-                     TBSSEL_1 |
-                     TBCLR;
-
-            TB0CCTL1 = CM_1 |
-                       SCS  |
-                       CAP;
-            */
             // algoritmo de comparacao de maior numero
             maior = vermelho;
             select_cor = 0;

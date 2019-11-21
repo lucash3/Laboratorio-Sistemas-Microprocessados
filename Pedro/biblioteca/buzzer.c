@@ -1,0 +1,13 @@
+#define notaC3 260
+#define notaC3s 277
+#define notaD3 292
+#define notaD3s 310
+#define notaE3 328
+#define notaF3 348
+#define notaF3s 366
+#define notaG3 390
+#define notaG3s 413
+#define notaA3 436
+#define notaA3s 464
+#define notaB3 490
+#define notaC4 516

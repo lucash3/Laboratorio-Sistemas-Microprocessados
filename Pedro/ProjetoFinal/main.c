@@ -4,9 +4,29 @@
 #include "../biblioteca/clock.c"
 #include "../biblioteca/buzzer.c"
 
-/**
- * main.c
- */
+volatile int durationFG = 0;
+
+// nota em Hz, duracao em segundos
+void play(int note, float duration) {
+
+    TB0CCR0 = get_N(note, FREQUENCY, MY_SMCLK);
+    if (note == 0) {
+        TB0CCR0 = 0;
+        P5OUT &= ~BIT4;
+    } else {
+        P5OUT |= BIT4;
+    }
+    TB0CTL |= TBSSEL__SMCLK;
+
+    TB1CCR0 = get_N(duration, PERIOD, MY_ACLK);
+    durationFG = 0;
+    TB1CTL |= TBSSEL__ACLK;
+
+    while(durationFG == 0);
+
+    return;
+}
+
 int main(void)
 {
     WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
@@ -18,63 +38,59 @@ int main(void)
     _Bool fechado = false;          // Aberto por padrão
     _Bool memoria = fechado;
 
-    TB0CTL  = TBSSEL__SMCLK |        // Configura ACLK @32768 Hz
+    TB0CTL  = TBSSEL__SMCLK |        // Configura SMCLK @1048576 Hz
                   MC__UP       |        // Modo de contagem UP
                   TBIE         |        // Habilita interrupção de overflow
                   TBCLR;                // Começa do zero
 
+    TB1CTL  = TBSSEL__ACLK |        // Configura ACLK @32768 Hz
+                      MC__UP       |        // Modo de contagem UP
+                      TBIE         |        // Habilita interrupção de overflow
+                      TBCLR;                // Começa do zero
+
     TB0CCTL1 = CCIE;                // Habilita interrupção localmente Do canal 1 (permite ver a flag ccifg)
-
-    int estrelinha[14];
-    /*
-    [notaC3, notaC3, notaG3, notaG3, notaA3, notaA3, notaG3,
-     notaF3, notaF3, notaE3, notaE3, notaD3, notaD3, notaC3];
-    */
-
-    int i = 0;
-    while (i < 14) {
-        if (i < 2 || i == 13)
-            estrelinha[i] = notaC3;
-        else if (i < 4 || i == 6)
-            estrelinha[i] = notaG3;
-        else if (i < 6)
-            estrelinha[i] = notaA3;
-        else if (i < 9)
-            estrelinha[i] = notaF3;
-        else if (i < 11)
-            estrelinha[i] = notaE3;
-        else
-            estrelinha[i] = notaD3;
-        i++;
-    }
-    i = 0;
-
-    int freq = 656;
-    TB0CCR0 = get_N(freq, FREQUENCE, MY_SMCLK);
-    //TB0CCR1 = TB0CCR0 * 0.5;
+    TB1CCTL1 = CCIE;
 
     P1DIR |= BIT1;              // PXDIR = 1 => saida
     P1REN &= ~BIT1;
     P1OUT &= ~BIT1;
 
+    P5DIR |= BIT4;
+    P5REN &= ~BIT4;
+    P5OUT &= ~BIT4;
+
     __enable_interrupt();           // Seta GIE no registro SR
 
     while(1)
     {
+        play(notaC3, 0.3);
+        play(0, 0.2);
+        play(notaC3, 0.3);
+        play(0, 0.2);
+        play(notaG3, 0.3);
+        play(0, 0.2);
+        play(notaG3, 0.3);
+        play(0, 0.2);
+        play(notaA3, 0.3);
+        play(0, 0.2);
+        play(notaA3, 0.3);
+        play(0, 0.2);
+        play(notaG3, 0.3);
+        play(notaG3, 0.3);
+        play(0, 0.2);
+
         update_button_state(S1ORS2, &fechado, &memoria);
         if (fechado == memoria) continue;
-            else if (fechado) {
-                if (button_pressed(S1)) {
-                    TB0CTL  ^= TBSSEL__SMCLK;
-                }
-                if (button_pressed(S2)) {
-                    if (i == 14) i = 0;
-                    freq = estrelinha[i++];
-                    TB0CCR0 = get_N(freq, FREQUENCE, MY_SMCLK);
-                }
+        else if (fechado) {
+            if (button_pressed(S1)) {
+                TB0CTL  ^= TBSSEL__SMCLK;
             }
-            debounce(5000);
+            if (button_pressed(S2)) {
+                // proxima musica
+            }
         }
+        //debounce(5000);
+    }
 
     return 0;
 }
@@ -89,6 +105,22 @@ __interrupt void TB0_ISR()     //EXCLUSIVO CCR0
             break;
         case 0xE:              // Overflow
             P1OUT ^= BIT1;
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma vector = TIMER1_B1_VECTOR
+__interrupt void TB1_ISR()     //EXCLUSIVO CCR0
+{
+    switch (TB1IV) {
+        case 0x2:              // Do canal 1
+            break;
+        case 0xE:              // Overflow
+            durationFG = 1;
+            TB0CTL &= ~TBSSEL__SMCLK;
+            TB1CTL &= ~TBSSEL__ACLK;
             break;
         default:
             break;

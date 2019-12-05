@@ -18,16 +18,6 @@ int main(void)
     lcdInit();
 
     /*
-     * Configurações para uso da função de botão da biblioteca gpio
-     * fechado é o estado atual do botão
-     * memória é o estado anterior
-     *
-     */
-
-    _Bool fechado = false;
-    _Bool memoria = fechado;
-
-    /*
      * TB0 usado para gerar a PWM que gera a nota musical
      * TB1 usado para tocar a nota por um periodo de tempo determinado
      * */
@@ -65,8 +55,8 @@ int main(void)
 
     while(1)
     {
-
         lcdClear();
+
         switch(musica) {
         case 0:
             lcdPrint("Jingle Bells\n");
@@ -85,23 +75,11 @@ int main(void)
             break;
         }
 
-        // Checagem do botão pressionado
-        update_button_state(S1ORS2, &fechado, &memoria);
-        if (fechado == memoria) continue;
-        else if (fechado) {
-            if (button_pressed(S1)) {
-                if (musica > 0) musica--;
-            }
-            if (button_pressed(S2)) {
-                if (musica < 2) musica++;
-            }
-        }
         debounce(5000);
     }
 
     return 0;
 }
-
 
 /*
  * Interrupção usada para gerar a PWM da nota musical

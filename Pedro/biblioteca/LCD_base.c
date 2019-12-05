@@ -1,17 +1,16 @@
-#include <msp430.h>
-// Básico para o LCD funcionar
+﻿// Básico para o LCD funcionar
 // P3.0 = SDA e P3.1=SCL
 
 #define BR100K 	10	//SCL operando em 100 kHz (SMCLK)
 #define BR10K   21	//SCL operando em 50 kHz (SMCLK)
-//#define BR10K   105	//SCL operando em 10 kHz (SMCLK)
+#define BR10K   105	//SCL operando em 10 kHz (SMCLK)
 
 #define BIT_BL	BIT3	//Back light
 #define BIT_E 	BIT2	//Enable
 
 // Dois possíveis endereços do PCF8574
-#define PCF_ADR	0x27
-//#define PCF_ADR	0x3F
+//#define PCF_ADR	0x27
+#define PCF_ADR	0x3F
 
 
 // Protótipo das funções
@@ -20,7 +19,7 @@ void LCD_inic(void);
 void LCD_aux(char dado);
 void PCF_STT_STP(void);
 int PCF_read(void);
-int PCF_write(char dado);
+void PCF_write(char dado);
 void delay(long limite);
 
 /*
@@ -37,15 +36,20 @@ void main(void){
 // Configurar Pinos I2C - UCSB0
 // P3.0 = SDA e P3.1=SCL
 void config_I2C(void){
-	P1SEL0 |= BIT2 | BIT3;
-	P1SEL1 &= ~(BIT2 | BIT3);
-	P1REN |= BIT2 | BIT3;
-	P1OUT |= BIT2 | BIT3;
-	UCB0CTLW0 |= UCSWRST;                             // put eUSCI_B in reset state
-    UCB0CTLW0 |= UCMODE_3 | UCMST;                    // I2C master mode, SMCLK
-    UCB0BRW = BR100K;                                   // baudrate = SMCLK / 8
-    UCB0CTLW0 &=~ UCSWRST;                            // clear reset register
-    //UCB0IE |= UCTXIE0 | UCNACKIE;                     // transmit and NACK interrupt enable
+    P3SEL |=  BIT1 | BIT0;    // Use dedicated module
+    P3REN |=  BIT1 | BIT0;    // Resistor enable
+    P3OUT |=  BIT1 | BIT0;    // Pull-up
+
+    UCB0CTL1 |= UCSWRST;    // UCSI B0 em ressete
+
+    UCB0CTL0 = UCSYNC |     //Síncrono
+               UCMODE_3 |   //Modo I2C
+               UCMST;       //Mestre
+
+    UCB0BRW = BR100K;       //100 kbps
+    //UCB0BRW = BR50K;      // 20 kbps
+    //UCB0BRW = BR10K;      // 10 kbps
+    UCB0CTL1 = UCSSEL_2;   //SMCLK e remove ressete
 }
 
 
@@ -61,7 +65,7 @@ void LCD_inic(void){
                 UCTXSTT;    //Gerar START
     while ( (UCB0IFG & UCTXIFG) == 0);          //Esperar TXIFG=1
     UCB0TXBUF = 0;                              //Saída PCF = 0;
-    while ( (UCB0IFG & UCNACKIFG) == 0 && (UCB0IFG & UCTXIFG) == 0);
+    while ( (UCB0CTL1 & UCTXSTT) == UCTXSTT);   //Esperar STT=0
     if ( (UCB0IFG & UCNACKIFG) == UCNACKIFG)    //NACK?
                 while(1);
 
@@ -94,13 +98,13 @@ void LCD_inic(void){
 // *** Só serve para a inicialização ***
 void LCD_aux(char dado){
     while ( (UCB0IFG & UCTXIFG) == 0);              //Esperar TXIFG=1
-    UCB0TXBUF = ((dado<<4)&0xF0) | BIT_BL;          //PCF7:4 = dado;
+    UCB0TXBUF = ((dado<<4)&0XF0) | BIT_BL;          //PCF7:4 = dado;
     delay(50);
     while ( (UCB0IFG & UCTXIFG) == 0);              //Esperar TXIFG=1
-    UCB0TXBUF = ((dado<<4)&0xF0) | BIT_BL | BIT_E;  //E=1
+    UCB0TXBUF = ((dado<<4)&0XF0) | BIT_BL | BIT_E;  //E=1
     delay(50);
     while ( (UCB0IFG & UCTXIFG) == 0);              //Esperar TXIFG=1
-    UCB0TXBUF = ((dado<<4)&0xF0) | BIT_BL;          //E=0;
+    UCB0TXBUF = ((dado<<4)&0XF0) | BIT_BL;          //E=0;
 }
 
 
@@ -138,22 +142,18 @@ int PCF_read(void){
 
 
 // Escrever dado na porta
-int PCF_write(char dado){
-    UCB0IFG = 0;
-
+void PCF_write(char dado){
     UCB0I2CSA = PCF_ADR;        //Endereço Escravo
     UCB0CTL1 |= UCTR    |       //Mestre TX
                 UCTXSTT;        //Gerar START
-
     while ( (UCB0IFG & UCTXIFG) == 0)   ;          //Esperar TXIFG=1
     UCB0TXBUF = dado;                              //Escrever dado
-
-	while ( !(UCB0IFG & UCNACKIFG) && !(UCB0IFG & UCTXIFG) );
-
+    while ( (UCB0CTL1 & UCTXSTT) == UCTXSTT)   ;   //Esperar STT=0
+    if ( (UCB0IFG & UCNACKIFG) == UCNACKIFG)       //NACK?
+                while(1);                          //Escravo gerou NACK
     UCB0CTL1 |= UCTXSTP;    					//Gerar STOP
     while ( (UCB0CTL1 & UCTXSTP) == UCTXSTP)   ;   //Esperar STOP
-
-    return UCB0IFG & UCNACKIFG;
+    delay(50);
 }
 
 

@@ -1,3 +1,9 @@
+
+/*
+*   Definições de frequência da PWM da nota
+*   Frequências adaptadas para o buzzer
+*/
+
 #define notaC3 260
 #define notaC3s 277
 #define notaD3 292
@@ -10,6 +16,7 @@
 #define notaA3 436
 #define notaA3s 464
 #define notaB3 490
+/*
 #define notaC4 516
 #define notaC4s 553
 #define notaD4 584
@@ -22,26 +29,32 @@
 #define notaA4
 #define notaA4s
 #define notaB4
+*/
 
 /*
- *     int estrelinha[14];
-    [notaC3, notaC3, notaG3, notaG3, notaA3, notaA3, notaG3,
-     notaF3, notaF3, notaE3, notaE3, notaD3, notaD3, notaC3];
+*   Dado a duração e a nota, configura as interrupções dos timers
+*   para executar as notas de acordo
+*/
 
-    int i = 0;
-    while (i < 14) {
-        if (i < 2 || i == 13)
-            estrelinha[i] = notaC3;
-        else if (i < 4 || i == 6)
-            estrelinha[i] = notaG3;
-        else if (i < 6)
-            estrelinha[i] = notaA3;
-        else if (i < 9)
-            estrelinha[i] = notaF3;
-        else if (i < 11)
-            estrelinha[i] = notaE3;
-        else
-            estrelinha[i] = notaD3;
-        i++;
+volatile int durationFG = 0;
+
+// Nota em Hz, duração em segundos
+void play(int note, float duration) {
+
+    TB0CCR0 = get_N(note, FREQUENCE, MY_SMCLK);
+    if (note == 0) {
+        TB0CCR0 = 0;
+        P5OUT &= ~BIT4;
+    } else {
+        P5OUT |= BIT4;
     }
- */
+    TB0CTL |= TBSSEL__SMCLK;
+
+    TB1CCR0 = get_N(duration, PERIOD, MY_ACLK);
+    durationFG = 0;
+    TB1CTL |= TBSSEL__ACLK;
+
+    while(durationFG == 0);
+
+    return;
+}
